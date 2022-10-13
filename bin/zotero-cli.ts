@@ -570,6 +570,7 @@ class Zotero {
       argparser.addArgument('--filter', { type: arg.json, help: 'Provide a filter as described in the Zotero API documentation under read requests / parameters. To retrieve multiple items you have use "itemkey"; for example: \'{"format": "json,bib", "itemkey": "A,B,C"}\'. See https://www.zotero.org/support/dev/web_api/v3/basics#search_syntax.' })
       argparser.addArgument('--addfile', { nargs: '*', help: 'Upload attachments to the item. (/items/new)' })
       argparser.addArgument('--savefiles', { nargs: '*', help: 'Download all attachments from the item (/items/KEY/file).' })
+      argparser.addArgument('--saveurl', { nargs: '*', help: 'Download URL content from the item.' })
       argparser.addArgument('--addtocollection', { nargs: '*', help: 'Add item to collections. (Convenience method: patch item->data->collections.)' })
       argparser.addArgument('--removefromcollection', { nargs: '*', help: 'Remove item from collections. (Convenience method: patch item->data->collections.)' })
       argparser.addArgument('--addtags', { nargs: '*', help: 'Add tags to item. (Convenience method: patch item->data->tags.)' })
@@ -594,6 +595,18 @@ class Zotero {
         console.log(`Downloading file ${item.data.filename}`)
         fs.writeFileSync(item.data.filename, await this.get(`/items/${item.key}/file`), 'binary')
       }))
+    }
+
+    if (this.args.saveurl) {
+      let filepath = this.args.saveurl;
+      let filename;
+      await request(item.data.url).on('response', function(res){
+          filename = res.headers['content-disposition'].split('filename=')[1].split(';')[0].replace(/['"]/g, '')
+          filepath =  filepath + filename
+          res.pipe(fs.createWriteStream(filepath))
+      });
+      this.print(path.basename(filename))
+      return
     }
 
     if (this.args.addfile) {
