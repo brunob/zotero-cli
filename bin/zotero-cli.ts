@@ -605,7 +605,7 @@ class Zotero {
           filepath =  filepath + filename
           res.pipe(fs.createWriteStream(filepath))
       });
-      this.print(path.basename(filename))
+      process.stdout.write(filename)
       return
     }
 
